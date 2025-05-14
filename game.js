@@ -13,7 +13,7 @@ const DASH_COOLDOWN = 30; // Cooldown frames between dashes
 const gameState = {
     isInsideTrain: false,
     isInsideTrain2: false, // NEW: inside train 2 (puzzle)
-    isInsideTrain2Second: false, // 第二次smoke puzzle
+    isInsideTrain2Second: false, // 2nd smoke puzzle
     transitionAlpha: 0,
     isTransitioning: false,
     headDirection: 'center', // 'left', 'right', 'up', 'down', 'center'
@@ -30,8 +30,8 @@ const gameState = {
     showBlackOverlay: false,
     train3Countdown: 0,
     train3Entered: false,
-    boardInfoType: 0, // 0: 初中->高中, 1: 大学->未来
-    npcTriggeredSecondTrain2: false, // 和npc对话后倒计时内进入train2
+    boardInfoType: 0, // 0: mid->high, 1: high->future
+    npcTriggeredSecondTrain2: false, // after taking with npc, enter train2
     canEnterSmokePuzzle2: false,
     isInSmokePuzzle2: false
 };
@@ -156,22 +156,22 @@ const SMOKE_CLEAR_RADIUS = 50;
 const SMOKE_FADE_STEP = 0.15; // How much to fade per mouse move
 const SMOKE_BLOBS = 80; // Number of smoke blobs
 
-// 新增全局变量控制弹窗显示和弹窗页码、倒计时暂停
+// Global variables for controlling the display of the modal, modal page number, and countdown pause
 let showGiveUpModal = false;
-let giveUpModalPage = 1; // 1: 第1页，2: 第2页
+let giveUpModalPage = 1; // 1: Page 1, 2: Page 2
 let pausedCountdown = null;
 
-// 新增变量，弹窗只能被激活一次
+// New variable: the modal can only be activated once
 let giveUpModalActivated = false;
 
-// 新增全局变量用于5秒后弹窗
+// Global variable for modal after 5 seconds
 let giveUpModalTimer = null;
 
-// 新增：shift提示计时器
+// New: shift key hint timer
 let showShiftHint = false;
 let shiftHintTimer = 0;
 
-// 加载并循环播放时钟音效
+// Load and loop clock sound effect
 const clockAudio = new Audio('clock.mp3');
 clockAudio.loop = true;
 clockAudio.volume = 0.5;
@@ -181,10 +181,10 @@ clockAudio.play().catch(() => {
     }, { once: true });
 });
 
-// 新增train3页面状态
-let train3Page = 0; // 0:未进入, 1-4:page1-4
+// New train3 page state
+let train3Page = 0; // 0: not entered, 1-4: page1-4
 
-// 检查train3是否有门，没有则生成
+// Check if train3 has a door, if not, generate one
 if (!trains[2].door) {
     trains[2].door = {
         carriageIndex: 1,
@@ -372,11 +372,11 @@ document.addEventListener('keydown', (event) => {
             smokeCtx = null;
             // 激活第二个boardinfo和8秒倒计时
             gameState.showDepartureWindow = true;
-            gameState.departureWindowTimer = 240; // 8秒
+            gameState.departureWindowTimer = 240; // 8s
             gameState.countdownTimer = 480; // 8秒
             gameState.isCountingDown = true;
             gameState.train2EntryWindow = true;
-            trains[1].door.isLocked = true; // 锁门
+            trains[1].door.isLocked = true; // lock door
             gameState.boardInfoType = 1; // boardinfo2: College -> A Promised Future
             gameState.npcTriggeredSecondTrain2 = false;
         } else if (gameState.isInSmokePuzzle2) {
@@ -390,10 +390,10 @@ document.addEventListener('keydown', (event) => {
             gameState.isInsideTrain = false;
             smokeCanvas = null;
             smokeCtx = null;
-            // 激活第二个boardinfo和8秒倒计时
+            // activate 2nd boardinfo and 8s countdown
             gameState.showDepartureWindow = true;
-            gameState.departureWindowTimer = 240; // 8秒
-            gameState.countdownTimer = 480; // 8秒
+            gameState.departureWindowTimer = 240; // 8s
+            gameState.countdownTimer = 480; // 8s
             gameState.isCountingDown = true;
             gameState.train2EntryWindow = true;
             gameState.boardInfoType = 1; // boardinfo2: College -> A Promised Future
@@ -405,16 +405,16 @@ document.addEventListener('keydown', (event) => {
         case 'ArrowUp':
         case 'w':
             keys.up = true;
-            // 恢复NPC对话和门互动的分支
+            // restore NPC dialogue and door interaction branches   
             if (gameState.isInsideTrain) {
                 gameState.headDirection = 'up';
             } else {
-                // 计算主角和NPC的距离
+                // calculate the distance between the character and the NPC
                 const characterCenterX = character.x + character.width / 2;
                 const npcCenterX = npc.x + npc.width / 2;
                 const distance = Math.abs(characterCenterX - npcCenterX);
                 if (npc.isVisible && distance <= NPC_INTERACTION_DISTANCE) {
-                    // 只在靠近NPC时才触发对话
+                    // only trigger dialogue when close to NPC
                     if (!gameState.showDialogue) {
                         // Start new dialogue
                         gameState.showDialogue = true;
@@ -428,7 +428,7 @@ document.addEventListener('keydown', (event) => {
                         if (npc.dialogue.currentLine === -1) {
                             // End dialogue after showing final line
                             gameState.showDialogue = false;
-                            npc.isVisible = false; // 让NPC消失，避免分支拦截
+                            npc.isVisible = false; // make NPC disappear, avoid branch intercept
                         } else {
                             // Move to next line
                             npc.dialogue.currentLine++;
@@ -442,12 +442,12 @@ document.addEventListener('keydown', (event) => {
                                     gameState.isCountingDown = true;
                                     gameState.countdownTimer = 600; // 10 seconds
                                     gameState.train2EntryWindow = true;
-                                    trains[1].door.isLocked = false; // 解锁train2门
-                                    // 新增：train3倒计时和boardinfo
-                                    gameState.train3Countdown = 600; // 10秒
+                                    trains[1].door.isLocked = false; // unlock train2 door
+                                    // new: train3 countdown and boardinfo
+                                    gameState.train3Countdown = 600; // 10s
                                     gameState.showDepartureWindow = true;
-                                    gameState.departureWindowTimer = 300; // 5秒
-                                    // 其他状态
+                                    gameState.departureWindowTimer = 300; // 5s
+                                    // other states
                                     gameState.showDialogue = false;
                                     gameState.isTransitioning = false;
                                     gameState.boardInfoType = 0; // boardinfo1: Middle School -> High School
@@ -657,12 +657,12 @@ function drawDepartureWindow() {
             infoY += lineHeight;
         });
     } else {
-        // 第二次，大学->未来
+        // 2nd，college->future
         ctx.fillText('Departure: College', infoX, infoY); infoY += lineHeight;
         ctx.fillText('Destination: A Promised Future', infoX, infoY); infoY += lineHeight;
         // Stops
         ctx.fillText('Stops:', infoX, infoY); infoY += lineHeight;
-        // 画地铁线
+        // draw line
         const stops = ['Work', 'Marriage', 'Baby', 'Divorce'];
         const lineStartX = infoX + 20;
         const lineY = infoY - lineHeight/2;
@@ -673,7 +673,7 @@ function drawDepartureWindow() {
         ctx.moveTo(lineStartX, lineY);
         ctx.lineTo(lineEndX, lineY);
         ctx.stroke();
-        // 画站点
+        // draw stops
         const stopGap = (lineEndX - lineStartX) / (stops.length - 1);
         ctx.fillStyle = '#1976D2';
         for (let i = 0; i < stops.length; i++) {
@@ -796,7 +796,7 @@ function update() {
         if (gameState.countdownTimer <= 0) {
             gameState.isCountingDown = false;
             gameState.train2EntryWindow = false;
-            // 只在第二次倒计时结束时触发
+            // only trigger when 2nd countdown ends
             if (gameState.canEnterSmokePuzzle2 && !giveUpModalActivated) {
                 trains[1].door.isLocked = true;
                 giveUpModalActivated = true;
@@ -806,7 +806,7 @@ function update() {
                     giveUpModalTimer = null;
                 }, 5000);
             }
-            // 其他原有逻辑...
+            // other original logic...
             npc.isVisible = true;
             npc.y = platform.y - npc.height;
             gameState.canEnterSmokePuzzle2 = false;
@@ -1149,7 +1149,7 @@ function update() {
         return;
     }
     
-    // 若未在8秒内进入train3，直接跳转page4
+    // If not entered train3 within 8s, directly jump to page4
     if (!gameState.train3Entered && gameState.train3Countdown === 0 && gameState.boardInfoType === 1 && !gameState.isCountingDown) {
         train3Page = 4;
         gameState.train3Entered = true;
@@ -1217,7 +1217,7 @@ function update() {
             for (let i = 0; i < lines2.length; i++) {
                 ctx.fillText(lines2[i], canvas.width / 2, modalY + 100 + i * 38);
             }
-            // Close 按钮
+            // Close button
             const closeBtnW = 160, closeBtnH = 54;
             const closeBtnX = canvas.width / 2 - closeBtnW / 2;
             const closeBtnY = modalY + modalH - 90;
@@ -1226,7 +1226,7 @@ function update() {
             ctx.fillStyle = '#fff';
             ctx.font = '24px sans-serif';
             ctx.fillText('Close', closeBtnX + closeBtnW / 2, closeBtnY + closeBtnH / 2 + 2);
-            // 监听点击Close按钮
+            // Listen for click on Close button
             canvas.onclick = function(e) {
                 const rect = canvas.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
@@ -1305,7 +1305,7 @@ function updateImageOpacities() {
 
 // Draw images based on direction
 function drawDirectionalImages() {
-    // 左边 - 俯视桌面：notebook杂乱堆叠，59分考卷，散落铅笔
+    // left - top view of desk: notebook messy stack, 59 points exam paper, scattered pencils
     if (gameState.leftImageOpacity > 0) {
         ctx.globalAlpha = gameState.leftImageOpacity;
         ctx.fillStyle = '#C8B69B';
@@ -1373,7 +1373,7 @@ function drawDirectionalImages() {
         ctx.restore();
         ctx.globalAlpha = 1;
     }
-    // 下方 - 桌洞（抽屉）内部正视切面图（更具体，参考图片）
+    // bottom - inner view of desk drawer (more specific, refer to picture)
     if (gameState.bottomImageOpacity > 0) {
         ctx.globalAlpha = gameState.bottomImageOpacity;
         ctx.fillStyle = '#D2A86A';
@@ -1427,7 +1427,7 @@ function drawDirectionalImages() {
         ctx.stroke();
         ctx.globalAlpha = 1;
     }
-    // 右边 - 用train1left.png替换篮球场（放大至与左侧图像空间相近）
+    // right - use train1left.png to replace basketball court (scale to match the space of the left image)
     if (gameState.rightImageOpacity > 0) {
         ctx.globalAlpha = gameState.rightImageOpacity;
         if (!window.train1leftImg) {
@@ -1443,7 +1443,7 @@ function drawDirectionalImages() {
         }
         ctx.globalAlpha = 1;
     }
-    // 上方 - 仅显示train1up.png图片，居中显示
+    // top - only display train1up.png image, centered
     if (gameState.upImageOpacity > 0) {
         ctx.globalAlpha = gameState.upImageOpacity;
         if (!window.train1upImg) {
